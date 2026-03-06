@@ -1,0 +1,38 @@
+name: Sync gh-pages from upstream
+
+on:
+  schedule:
+    # 每天凌晨 2 点自动同步
+    - cron: '0 2 * * *'
+  workflow_dispatch: # 允许手动触发
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout your repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Add upstream remote
+        run: |
+          git remote add upstream https://github.com/jaywcjlove/linux-command.git
+          git fetch upstream
+
+      - name: Sync gh-pages branch
+        run: |
+          # 获取上游的 gh-pages 分支
+          git fetch upstream gh-pages:gh-pages-upstream
+          
+          # 切换到 gh-pages 分支（如果不存在则创建）
+          git checkout -B gh-pages gh-pages-upstream
+          
+          # 推送到你的仓库
+          git push origin gh-pages --force
